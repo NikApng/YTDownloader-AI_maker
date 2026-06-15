@@ -228,6 +228,7 @@ class App(ctk.CTk):
         self._dl_dir      = DEFAULT_DIR
         self._downloading = False
         self._last_pct    = -1
+        self._cookies_browser = "Нет"
 
         # subtitle / video state
         self._sub_video   = ""
@@ -355,7 +356,26 @@ class App(ctk.CTk):
             height=40, fg_color=p["input_bg"], border_color=p["input_border"],
             text_color=p["text"], placeholder_text_color=p["placeholder"],
             corner_radius=10, font=ctk.CTkFont("Segoe UI", 13))
-        self._url_entry.grid(row=1, column=0, padx=12, pady=(0, 12), sticky="ew")
+        self._url_entry.grid(row=1, column=0, padx=12, pady=(0, 6), sticky="ew")
+
+        # VK / cookies row
+        vk_row = ctk.CTkFrame(uc, fg_color="transparent")
+        vk_row.grid(row=2, column=0, padx=12, pady=(0, 10), sticky="ew")
+        vk_row.grid_columnconfigure(2, weight=1)
+        Lbl(vk_row, "🔑 Cookies:", p, 10, dim=True).grid(row=0, column=0, padx=(0, 6))
+        self._cookies_var = ctk.StringVar(value="Нет")
+        _browsers = ["Нет", "Chrome", "Firefox", "Edge", "Opera", "Safari"]
+        ctk.CTkOptionMenu(vk_row, values=_browsers, variable=self._cookies_var,
+                          height=26, corner_radius=7,
+                          fg_color=p["input_bg"], button_color=p["accent"],
+                          button_hover_color=p["accent_hover"],
+                          dropdown_fg_color=p["card"], dropdown_hover_color=p["card_hover"],
+                          dropdown_text_color=p["text"], text_color=p["text"],
+                          font=ctk.CTkFont("Segoe UI", 11),
+                          command=lambda v: setattr(self, "_cookies_browser", v)
+                          ).grid(row=0, column=1, padx=(0, 10))
+        Lbl(vk_row, "Выбери браузер если скачиваешь с ВК Видео / закрытого канала",
+            p, 10, dim=True, anchor="w").grid(row=0, column=2, sticky="w")
 
         r2 = ctk.CTkFrame(parent, fg_color="transparent")
         r2.grid(row=1, column=0, padx=6, pady=(0, 5), sticky="ew")
@@ -953,6 +973,8 @@ class App(ctk.CTk):
         if is_mp3:
             opts["postprocessors"] = [{"key": "FFmpegExtractAudio",
                                         "preferredcodec": "mp3", "preferredquality": "192"}]
+        if getattr(self, "_cookies_browser", "Нет") != "Нет":
+            opts["cookiesfrombrowser"] = (self._cookies_browser.lower(),)
         try:
             self.after(0, self._log_dl, "▶  Начинаю загрузку…")
             with yt_dlp.YoutubeDL(opts) as ydl:
